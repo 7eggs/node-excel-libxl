@@ -1,0 +1,24 @@
+{
+  "name": "excel-libxl",
+  "author": "Alexander Makarenko <estliberitas@gmail.com>",
+  "license": "MIT",
+  "version": "0.0.1",
+  "description": "libxl bindings for Node.js",
+  "keywords": ["excel", "libxl", "spreadsheet", "addon"],
+  "homepage": "https://github.com/estliberitas/node-excel-libxl",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/estliberitas/node-excel-libxl.git"
+  },
+  "bugs": {
+    "url": "https://github.com/estliberitas/node-excel-libxl/issues"
+  },
+  "engines": [
+    "node >= 0.8"
+  ],
+  "main": "./lib/excel-libxl.js",
+  "gypfile": true,
+  "scripts": {
+    "install": "node-gyp rebuild"
+  }
+}
