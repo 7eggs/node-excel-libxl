@@ -1,24 +1,22 @@
 {
   'targets': [
     {
-      # have to specify 'liblib' here since gyp will remove the first one :\
-      'target_name': 'libxl_bindings.cc',
+      'target_name': 'liblibxl_bindings',
       'sources': [
         'src/libxl_bindings.cc',
         'src/libxl_book.cc'
       ],
       'conditions': [
-        ['OS=="win"', {
-          # no Windows support yet...
-        }, {
-          'libraries': [
-            '-llept', '-ltesseract'
-          ],
+        ['OS=="linux"', {
           'include_dirs': [
-            'deps/libxl'
+            'deps/libxl/include_cpp'
+          ],
+          'libraries': [
+            '-lxl'
           ]
-        }],
-        ['OS=="
+        }, {
+          # only Linux is supported now ...
+        }]
       ]
     }
   ]
