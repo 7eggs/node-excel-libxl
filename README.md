@@ -1,4 +1,4 @@
 node-excel-libxl
 ================
 
-libxl bindings for Node.js. libxl is a library for working with Excel files.
+[libxl](http://www.libxl.com/) bindings for Node.js. libxl is a library for working with Excel files.
