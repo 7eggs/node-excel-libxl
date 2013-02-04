@@ -2,7 +2,7 @@
   "name": "excel-libxl",
   "author": "Alexander Makarenko <estliberitas@gmail.com>",
   "license": "MIT",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "libxl bindings for Node.js",
   "keywords": ["excel", "libxl", "spreadsheet", "addon"],
   "homepage": "https://github.com/estliberitas/node-excel-libxl",
