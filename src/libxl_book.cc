@@ -4,26 +4,15 @@
  * See license text in LICENSE file
  */
 
-#include <node.h>
 #include "libxl_book.h"
+#include "libxl_sheet.h"
 
 using namespace v8;
-
-enum {
-  BOOK_TYPE_XLS,
-  BOOK_TYPE_XLSX
-};
 
 
 Persistent<Function> LibxlBook::constructor;
 
 
-Handle<Value> LibxlBook::CreateBookFactory(HandleScope& scope, int type) {
-  const unsigned argc = 1;
-  Handle<Value> argv[argc] = { Integer::New(type) };
-  Local<Object> instance = constructor->NewInstance(argc, argv);
-  return scope.Close(instance);
-}
 
 
 LibxlBook::LibxlBook(int type) {
@@ -35,25 +24,24 @@ LibxlBook::LibxlBook(int type) {
 }
 
 
+
+
 LibxlBook::~LibxlBook() {
   book->release();
   delete[] book;
 }
 
 
-Handle<Value> LibxlBook::New(const Arguments& args) {
-  HandleScope scope;
 
-  REQ_INT_ARG(0, book_type);
 
-  if (book_type != BOOK_TYPE_XLS && book_type != BOOK_TYPE_XLSX) {
-    return THREXC("Unknown book type");
-  }
-
-  LibxlBook* bookObject = new LibxlBook(book_type);
-  bookObject->Wrap(args.This());
-  return args.This();
+Handle<Value> LibxlBook::CreateBookFactory(HandleScope& scope, int type) {
+  const unsigned argc = 1;
+  Handle<Value> argv[argc] = { Integer::New(type) };
+  Local<Object> instance = constructor->NewInstance(argc, argv);
+  return scope.Close(instance);
 }
+
+
 
 
 Handle<Value> LibxlBook::CreateBook(const Arguments& args) {
@@ -62,16 +50,391 @@ Handle<Value> LibxlBook::CreateBook(const Arguments& args) {
 }
 
 
+
+
 Handle<Value> LibxlBook::CreateXMLBook(const Arguments& args) {
   HandleScope scope;
   return CreateBookFactory(scope, BOOK_TYPE_XLSX);
 }
 
 
+
+
+/**
+ * Constructor
+ *
+ * @constructor
+ * @param {int} book_type
+ *    Type of book: BOOK_TYPE_XLS, BOOK_TYPE_XLSX
+ */
+Handle<Value> LibxlBook::New(const Arguments& args) {
+  HandleScope scope;
+
+  REQ_INT_ARG(0, book_type);
+
+  if (book_type != BOOK_TYPE_XLS && book_type != BOOK_TYPE_XLSX) {
+   return THREXC("Unknown book type");
+  }
+
+  LibxlBook* bookObject = new LibxlBook(book_type);
+  bookObject->Wrap(args.This());
+  return args.This();
+}
+
+
+
+
+/**
+ * Load book from given path
+ *
+ * @param {String} path
+ *    Path of Excel file to load
+ * @param {Function} cb
+ *    Callback taking error as the only argument
+ */
+Handle<Value> LibxlBook::Load(const Arguments& args) {
+  HandleScope scope;
+
+  REQ_STR_ARG(0, path);
+  REQ_FUNC_ARG(1, cb);
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+  const unsigned argc = 1;
+  Local<Value> argv[argc];
+
+  if (!obj->book->load(path)) {
+    argv[0] = V8EXC(obj->book->errorMessage());
+  } else {
+    argv[0] = Local<Value>::New(Null());
+  }
+  cb->Call(Context::GetCurrent()->Global(), argc, argv);
+
+  return scope.Close(Undefined());
+}
+
+
+
+
+/**
+ * Load book from given path (sync)
+ *
+ * @param {String} path
+ *    Path of Excel file to load
+ */
+Handle<Value> LibxlBook::LoadSync(const Arguments& args) {
+  HandleScope scope;
+
+  REQ_STR_ARG(0, path);
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+  if (!obj->book->load(path)) {
+    return THREXC(obj->book->errorMessage());
+  }
+
+  return scope.Close(Undefined());
+}
+
+
+
+
+/**
+ * Save book to given path
+ *
+ * @param {String} path
+ *    Path to save book file
+ * @param {Function} cb
+ *    Callback taking error as the only argument
+ */
+Handle<Value> LibxlBook::Save(const Arguments& args) {
+  HandleScope scope;
+
+  REQ_STR_ARG(0, path);
+  REQ_FUNC_ARG(1, cb);
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+  const unsigned argc = 1;
+  Local<Value> argv[argc];
+
+  if (!obj->book->save(path)) {
+    argv[0] = V8EXC(obj->book->errorMessage());
+  } else {
+    argv[0] = Local<Value>::New(Null());
+  }
+  cb->Call(Context::GetCurrent()->Global(), argc, argv);
+
+  return scope.Close(Undefined());
+}
+
+
+
+
+/**
+ * Save book to given path (sync)
+ *
+ * @param {String} path
+ *    Path to save book file
+ */
+Handle<Value> LibxlBook::SaveSync(const Arguments& args) {
+  HandleScope scope;
+
+  REQ_STR_ARG(0, path);
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+  if (!obj->book->save(path)) {
+    return THREXC(obj->book->errorMessage());
+  }
+
+  return scope.Close(Undefined());
+}
+
+
+
+
+/**
+ * Release book memory
+ */
+Handle<Value> LibxlBook::Release(const Arguments& args) {
+  HandleScope scope;
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+  obj->book->release();
+
+  return scope.Close(Undefined());
+}
+
+
+
+
+/**
+ * Set license key
+ *
+ * @param {String} name
+ *    Customer name
+ * @param {String} key
+ *    License key
+ */
+Handle<Value> LibxlBook::SetKey(const Arguments& args) {
+  HandleScope scope;
+
+  REQ_STR_ARG(0, name);
+  REQ_STR_ARG(1, key);
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+  obj->book->setKey(name, key);
+
+  return scope.Close(Undefined());
+}
+
+
+
+
+/**
+ * Get sheet from arguments
+ *
+ * @param {Arguments} args
+ *    Arguments of some function call
+ * @param {int} idx
+ *    Index at which we should get sheet
+ */
+libxl::Sheet* LibxlBook::getSheetFromArguments(const Arguments& args, int idx) {
+  libxl::Sheet* sheet;
+
+  if (args.Length() > idx) {
+    LibxlSheet* sheetObj = ObjectWrap::Unwrap<LibxlSheet>(args[idx]->ToObject());
+    sheet = sheetObj->getSheet();
+  } else {
+    sheet = 0;
+  }
+
+  return sheet;
+}
+
+
+
+
+/**
+ * Add new sheet
+ *
+ * @param {String} name
+ *    Name of sheet
+ * @param {Sheet} [initSheet]
+ *    Initial sheet (i.e. existing)
+ */
+Handle<Value> LibxlBook::AddSheetSync(const Arguments& args) {
+  HandleScope scope;
+
+  REQ_STR_ARG(0, name);
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+  libxl::Sheet* initSheet = getSheetFromArguments(args, 1);
+  libxl::Sheet* sheet = obj->book->addSheet(name, initSheet);
+
+  if (sheet == NULL) {
+    return THREXC(obj->book->errorMessage());
+  }
+
+  return scope.Close(LibxlSheet::NewInstance(sheet));
+}
+
+
+
+
+/**
+ * Insert new sheet at specified index
+ *
+ * @param {int}
+ *    Index to insert new sheet at
+ * @param {String} name
+ *    Name of sheet
+ * @param {Sheet} [initSheet]
+ *    Initial sheet (i.e. existing)
+ */
+Handle<Value> LibxlBook::InsertSheetSync(const Arguments& args) {
+  HandleScope scope;
+
+  REQ_INT_ARG(0, idx)
+  REQ_STR_ARG(1, name);
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+  libxl::Sheet* initSheet = getSheetFromArguments(args, 2);
+  libxl::Sheet* sheet = obj->book->insertSheet(idx, name, initSheet);
+
+  if (sheet == NULL) {
+    return THREXC(obj->book->errorMessage());
+  }
+
+  return scope.Close(LibxlSheet::NewInstance(sheet));
+}
+
+
+
+
+/**
+ * Get sheet at specified index
+ *
+ * @param {int}
+ *    Index of sheet
+ */
+Handle<Value> LibxlBook::GetSheetSync(const Arguments& args) {
+  HandleScope scope;
+
+  REQ_INT_ARG(0, idx)
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+  libxl::Sheet* sheet = obj->book->getSheet(idx);
+
+  if (sheet == NULL) {
+    return THREXC(obj->book->errorMessage());
+  }
+
+  return scope.Close(LibxlSheet::NewInstance(sheet));
+}
+
+
+
+
+/**
+ * Delete sheet
+ *
+ * @param {int}
+ *    Index of sheet
+ */
+Handle<Value> LibxlBook::DeleteSheetSync(const Arguments& args) {
+  HandleScope scope;
+
+  REQ_INT_ARG(0, idx)
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+
+  if (!obj->book->delSheet(idx)) {
+    return THREXC(obj->book->errorMessage());
+  }
+
+  return scope.Close(Undefined());
+}
+
+
+
+
+/**
+ * Get count of sheets in a book
+ */
+Handle<Value> LibxlBook::SheetCountSync(const Arguments& args) {
+  HandleScope scope;
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+  return scope.Close(Integer::New(obj->book->sheetCount()));
+}
+
+
+
+
 void LibxlBook::Initialize(Handle<Object> target) {
   Local<FunctionTemplate> t = FunctionTemplate::New(New);
   t->SetClassName(String::NewSymbol("Book"));
   t->InstanceTemplate()->SetInternalFieldCount(1);
+
+  // base
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("load"),
+    FunctionTemplate::New(Load)->GetFunction()
+  );
+
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("loadSync"),
+    FunctionTemplate::New(LoadSync)->GetFunction()
+  );
+
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("save"),
+    FunctionTemplate::New(Save)->GetFunction()
+  );
+
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("saveSync"),
+    FunctionTemplate::New(SaveSync)->GetFunction()
+  );
+
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("release"),
+    FunctionTemplate::New(Release)->GetFunction()
+  );
+
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("setKey"),
+    FunctionTemplate::New(SetKey)->GetFunction()
+  );
+
+  // Sheets
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("addSheetSync"),
+    FunctionTemplate::New(AddSheetSync)->GetFunction()
+  );
+
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("insertSheetSync"),
+    FunctionTemplate::New(InsertSheetSync)->GetFunction()
+  );
+
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("insertSheetSync"),
+    FunctionTemplate::New(InsertSheetSync)->GetFunction()
+  );
+
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("getSheetSync"),
+    FunctionTemplate::New(GetSheetSync)->GetFunction()
+  );
+
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("deleteSheetSync"),
+    FunctionTemplate::New(DeleteSheetSync)->GetFunction()
+  );
+
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("sheetCountSync"),
+    FunctionTemplate::New(SheetCountSync)->GetFunction()
+  );
 
   constructor = Persistent<Function>::New(t->GetFunction());
   target->Set(String::NewSymbol("Book"), constructor);

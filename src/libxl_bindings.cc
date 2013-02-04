@@ -6,11 +6,13 @@
 
 #include <node.h>
 #include "libxl_book.h"
+#include "libxl_sheet.h"
 
 using namespace v8;
 
 void InitExcelLibxl(Handle<Object> target) {
   LibxlBook::Initialize(target);
+  LibxlSheet::Initialize(target);
 }
 
 NODE_MODULE(libxl_bindings, InitExcelLibxl)
