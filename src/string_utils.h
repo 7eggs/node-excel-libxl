@@ -23,11 +23,13 @@ extern char* v8stoas(String&);*/
   #define CHAR wchar_t
 
   #define stov8s wstov8s
+  #define __strdup wcsdup
   /*#define v8stos v8stows*/
 #else
   #define CHAR char
 
   #define stov8s astov8s
+  #define __strdup strdup
   /*#define v8stos v8stoas*/
 #endif
 

@@ -28,7 +28,6 @@ LibxlBook::LibxlBook(int type) {
 
 LibxlBook::~LibxlBook() {
   book->release();
-  delete[] book;
 }
 
 
@@ -273,7 +272,8 @@ Handle<Value> LibxlBook::AddSheetSync(const Arguments& args) {
     return THREXC(obj->book->errorMessage());
   }
 
-  return scope.Close(LibxlSheet::NewInstance(sheet));
+  Handle<Value> sheetObj = LibxlSheet::NewInstance(obj->book, sheet);
+  return scope.Close(sheetObj);
 }
 
 
@@ -303,7 +303,8 @@ Handle<Value> LibxlBook::InsertSheetSync(const Arguments& args) {
     return THREXC(obj->book->errorMessage());
   }
 
-  return scope.Close(LibxlSheet::NewInstance(sheet));
+  Handle<Value> sheetObj = LibxlSheet::NewInstance(obj->book, sheet);
+  return scope.Close(sheetObj);
 }
 
 
@@ -327,7 +328,8 @@ Handle<Value> LibxlBook::GetSheetSync(const Arguments& args) {
     return THREXC(obj->book->errorMessage());
   }
 
-  return scope.Close(LibxlSheet::NewInstance(sheet));
+  Handle<Value> sheetObj = LibxlSheet::NewInstance(obj->book, sheet);
+  return scope.Close(sheetObj);
 }
 
 
