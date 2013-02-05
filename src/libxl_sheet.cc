@@ -106,7 +106,7 @@ Handle<Value> LibxlSheet::GetName(const Arguments& args) {
 
 /**
  * Set name of sheet
- *book
+ *
  * @param {String} newName
  *    New name of sheet
  */
