@@ -6,6 +6,8 @@
         'src/libxl_bindings.cc',
         'src/libxl_book.cc',
         'src/libxl_sheet.cc',
+        'src/libxl_format.cc',
+        'src/libxl_font.cc',
         'src/string_utils.cc'
       ],
       'conditions': [

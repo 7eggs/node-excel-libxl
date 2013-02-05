@@ -6,6 +6,8 @@
 
 #include "libxl_book.h"
 #include "libxl_sheet.h"
+#include "libxl_format.h"
+#include "libxl_font.h"
 
 using namespace v8;
 
@@ -235,8 +237,8 @@ Handle<Value> LibxlBook::SetKey(const Arguments& args) {
  * @param {int} idx
  *    Index at which we should get sheet
  */
-libxl::Sheet* LibxlBook::getSheetFromArguments(const Arguments& args, int idx) {
-  libxl::Sheet* sheet;
+Sheet* LibxlBook::getSheetFromArguments(const Arguments& args, int idx) {
+  Sheet* sheet;
 
   if (args.Length() > idx) {
     LibxlSheet* sheetObj = ObjectWrap::Unwrap<LibxlSheet>(args[idx]->ToObject());
@@ -259,14 +261,14 @@ libxl::Sheet* LibxlBook::getSheetFromArguments(const Arguments& args, int idx) {
  * @param {Sheet} [initSheet]
  *    Initial sheet (i.e. existing)
  */
-Handle<Value> LibxlBook::AddSheetSync(const Arguments& args) {
+Handle<Value> LibxlBook::AddSheet(const Arguments& args) {
   HandleScope scope;
 
   REQ_STR_ARG(0, name);
 
   LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
-  libxl::Sheet* initSheet = getSheetFromArguments(args, 1);
-  libxl::Sheet* sheet = obj->book->addSheet(name, initSheet);
+  Sheet* initSheet = getSheetFromArguments(args, 1);
+  Sheet* sheet = obj->book->addSheet(name, initSheet);
 
   if (sheet == NULL) {
     return THREXC(obj->book->errorMessage());
@@ -289,15 +291,15 @@ Handle<Value> LibxlBook::AddSheetSync(const Arguments& args) {
  * @param {Sheet} [initSheet]
  *    Initial sheet (i.e. existing)
  */
-Handle<Value> LibxlBook::InsertSheetSync(const Arguments& args) {
+Handle<Value> LibxlBook::InsertSheet(const Arguments& args) {
   HandleScope scope;
 
   REQ_INT_ARG(0, idx)
   REQ_STR_ARG(1, name);
 
   LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
-  libxl::Sheet* initSheet = getSheetFromArguments(args, 2);
-  libxl::Sheet* sheet = obj->book->insertSheet(idx, name, initSheet);
+  Sheet* initSheet = getSheetFromArguments(args, 2);
+  Sheet* sheet = obj->book->insertSheet(idx, name, initSheet);
 
   if (sheet == NULL) {
     return THREXC(obj->book->errorMessage());
@@ -316,14 +318,17 @@ Handle<Value> LibxlBook::InsertSheetSync(const Arguments& args) {
  * @param {int}
  *    Index of sheet
  */
-Handle<Value> LibxlBook::GetSheetSync(const Arguments& args) {
+Handle<Value> LibxlBook::GetSheet(const Arguments& args) {
   HandleScope scope;
 
   REQ_INT_ARG(0, idx)
 
   LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
-  libxl::Sheet* sheet = obj->book->getSheet(idx);
+  if (idx >= obj->book->sheetCount()) {
+    return THREXC("Specified index is out of range");
+  }
 
+  Sheet* sheet = obj->book->getSheet(idx);
   if (sheet == NULL) {
     return THREXC(obj->book->errorMessage());
   }
@@ -341,7 +346,7 @@ Handle<Value> LibxlBook::GetSheetSync(const Arguments& args) {
  * @param {int}
  *    Index of sheet
  */
-Handle<Value> LibxlBook::DeleteSheetSync(const Arguments& args) {
+Handle<Value> LibxlBook::DeleteSheet(const Arguments& args) {
   HandleScope scope;
 
   REQ_INT_ARG(0, idx)
@@ -361,11 +366,203 @@ Handle<Value> LibxlBook::DeleteSheetSync(const Arguments& args) {
 /**
  * Get count of sheets in a book
  */
-Handle<Value> LibxlBook::SheetCountSync(const Arguments& args) {
+Handle<Value> LibxlBook::SheetCount(const Arguments& args) {
   HandleScope scope;
 
   LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
   return scope.Close(Integer::New(obj->book->sheetCount()));
+}
+
+
+
+
+/**
+ * Get format from arguments
+ *
+ * @param {Arguments} args
+ *    Arguments of some function call
+ * @param {int} idx
+ *    Index at which we should get format
+ */
+libxl::Format* LibxlBook::getFormatFromArguments(const Arguments& args, int idx) {
+  libxl::Format* format;
+
+  if (args.Length() > idx) {
+    LibxlFormat* formatObj = ObjectWrap::Unwrap<LibxlFormat>(args[idx]->ToObject());
+    format = formatObj->getFormat();
+  } else {
+    format = 0;
+  }
+
+  return format;
+}
+
+
+
+
+/**
+ * Add new format
+ *
+ * @param {Format} [initFormat]
+ *    Initial format (i.e. existing)
+ * @return {LibxlFormat}
+ *    Format wrapper instance
+ */
+Handle<Value> LibxlBook::AddFormat(const Arguments& args) {
+  HandleScope scope;
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+  libxl::Format* initFormat = getFormatFromArguments(args, 0);
+  libxl::Format* format = obj->book->addFormat(initFormat);
+
+  if (format == NULL) {
+    return THREXC(obj->book->errorMessage());
+  }
+
+  Handle<Value> formatObj = LibxlFormat::NewInstance(obj->book, format);
+  return scope.Close(formatObj);
+}
+
+
+
+
+/**
+ * Get format by index
+ *
+ * @param {int}
+ *    Index of format
+ * @return {LibxlFormat}
+ *    Format wrapper instance
+ */
+Handle<Value> LibxlBook::Format(const Arguments& args) {
+  HandleScope scope;
+
+  REQ_INT_ARG(0, idx)
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+  if (idx >= obj->book->formatSize()) {
+    return THREXC("Specified index is out of range");
+  }
+
+  libxl::Format* format = obj->book->format(idx);
+  if (format == NULL) {
+    return THREXC(obj->book->errorMessage());
+  }
+
+  Handle<Value> formatObj = LibxlFormat::NewInstance(obj->book, format);
+  return scope.Close(formatObj);
+}
+
+
+
+
+/**
+ * Get count of formats in a book
+ *
+ * @return {int}
+ *    Number of formats
+ */
+Handle<Value> LibxlBook::FormatSize(const Arguments& args) {
+  HandleScope scope;
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+  return scope.Close(Integer::New(obj->book->formatSize()));
+}
+
+
+
+
+/**
+ * Get font from arguments
+ *
+ * @param {Arguments} args
+ *    Arguments of some function call
+ * @param {int} idx
+ *    Index at which we should get font
+ */
+libxl::Font* LibxlBook::getFontFromArguments(const Arguments& args, int idx) {
+  libxl::Font* font;
+
+  if (args.Length() > idx) {
+    LibxlFont* fontObj = ObjectWrap::Unwrap<LibxlFont>(args[idx]->ToObject());
+    font = fontObj->getFont();
+  } else {
+    font = 0;
+  }
+
+  return font;
+}
+
+
+
+
+/**
+ * Add new font
+ *
+ * @param {Font} [initFont]
+ *    Initial font (i.e. existing)
+ * @return {LibxlFont}
+ *    Font wrapper instance
+ */
+Handle<Value> LibxlBook::AddFont(const Arguments& args) {
+  HandleScope scope;
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+  libxl::Font* initFont = getFontFromArguments(args, 0);
+  libxl::Font* font = obj->book->addFont(initFont);
+
+  if (font == NULL) {
+    return THREXC(obj->book->errorMessage());
+  }
+
+  Handle<Value> fontObj = LibxlFont::NewInstance(obj->book, font);
+  return scope.Close(fontObj);
+}
+
+
+
+
+/**
+ * Get font by index
+ *
+ * @param {int}
+ *    Index of font
+ * @return {LibxlFont}
+ *    Font wrapper instance
+ */
+Handle<Value> LibxlBook::Font(const Arguments& args) {
+  HandleScope scope;
+
+  REQ_INT_ARG(0, idx)
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+  if (idx >= obj->book->fontSize()) {
+    return THREXC("Specified index is out of range");
+  }
+
+  libxl::Font* font = obj->book->font(idx);
+  if (font == NULL) {
+    return THREXC(obj->book->errorMessage());
+  }
+
+  Handle<Value> fontObj = LibxlFont::NewInstance(obj->book, font);
+  return scope.Close(fontObj);
+}
+
+
+
+
+/**
+ * Get count of fonts in a book
+ *
+ * @return {int}
+ *    Number of fonts
+ */
+Handle<Value> LibxlBook::FontSize(const Arguments& args) {
+  HandleScope scope;
+
+  LibxlBook* obj = ObjectWrap::Unwrap<LibxlBook>(args.This());
+  return scope.Close(Integer::New(obj->book->fontSize()));
 }
 
 
@@ -409,33 +606,65 @@ void LibxlBook::Initialize(Handle<Object> target) {
 
   // Sheets
   t->PrototypeTemplate()->Set(
-    String::NewSymbol("addSheetSync"),
-    FunctionTemplate::New(AddSheetSync)->GetFunction()
+    String::NewSymbol("addSheet"),
+    FunctionTemplate::New(AddSheet)->GetFunction()
   );
 
   t->PrototypeTemplate()->Set(
-    String::NewSymbol("insertSheetSync"),
-    FunctionTemplate::New(InsertSheetSync)->GetFunction()
+    String::NewSymbol("insertSheet"),
+    FunctionTemplate::New(InsertSheet)->GetFunction()
   );
 
   t->PrototypeTemplate()->Set(
-    String::NewSymbol("insertSheetSync"),
-    FunctionTemplate::New(InsertSheetSync)->GetFunction()
+    String::NewSymbol("insertSheet"),
+    FunctionTemplate::New(InsertSheet)->GetFunction()
   );
 
   t->PrototypeTemplate()->Set(
-    String::NewSymbol("getSheetSync"),
-    FunctionTemplate::New(GetSheetSync)->GetFunction()
+    String::NewSymbol("getSheet"),
+    FunctionTemplate::New(GetSheet)->GetFunction()
   );
 
   t->PrototypeTemplate()->Set(
-    String::NewSymbol("deleteSheetSync"),
-    FunctionTemplate::New(DeleteSheetSync)->GetFunction()
+    String::NewSymbol("deleteSheet"),
+    FunctionTemplate::New(DeleteSheet)->GetFunction()
   );
 
   t->PrototypeTemplate()->Set(
-    String::NewSymbol("sheetCountSync"),
-    FunctionTemplate::New(SheetCountSync)->GetFunction()
+    String::NewSymbol("sheetCount"),
+    FunctionTemplate::New(SheetCount)->GetFunction()
+  );
+
+  // formats
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("addFormat"),
+    FunctionTemplate::New(AddFormat)->GetFunction()
+  );
+
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("format"),
+    FunctionTemplate::New(Format)->GetFunction()
+  );
+
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("formatSize"),
+    FunctionTemplate::New(FormatSize)->GetFunction()
+  );
+
+  // fonts
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("addFont"),
+    FunctionTemplate::New(AddFont)->GetFunction()
+  );
+
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("font"),
+    FunctionTemplate::New(Font)->GetFunction()
+  );
+
+  t->PrototypeTemplate()->Set(
+    String::NewSymbol("fontSize"),
+    FunctionTemplate::New(FontSize)->GetFunction()
   );
 
   constructor = Persistent<Function>::New(t->GetFunction());

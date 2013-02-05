@@ -13,14 +13,19 @@
 
 using namespace v8;
 
+
 enum {
   BOOK_TYPE_XLS,
   BOOK_TYPE_XLSX
 };
 
+
 class LibxlBook : public node::ObjectWrap {
   public:
     static void Initialize(Handle<Object>);
+    static libxl::Sheet* getSheetFromArguments(const Arguments&, int);
+    static libxl::Format* getFormatFromArguments(const Arguments&, int);
+    static libxl::Font* getFontFromArguments(const Arguments&, int);
 
   private:
     static Persistent<Function> constructor;
@@ -37,12 +42,21 @@ class LibxlBook : public node::ObjectWrap {
     static Handle<Value> Release(const Arguments&);
     static Handle<Value> SetKey(const Arguments&);
 
-    static libxl::Sheet* getSheetFromArguments(const Arguments&, int);
-    static Handle<Value> AddSheetSync(const Arguments&);
-    static Handle<Value> InsertSheetSync(const Arguments&);
-    static Handle<Value> GetSheetSync(const Arguments&);
-    static Handle<Value> DeleteSheetSync(const Arguments&);
-    static Handle<Value> SheetCountSync(const Arguments&);
+    static Handle<Value> AddSheet(const Arguments&);
+    static Handle<Value> InsertSheet(const Arguments&);
+    static Handle<Value> GetSheet(const Arguments&);
+    static Handle<Value> DeleteSheet(const Arguments&);
+    static Handle<Value> SheetCount(const Arguments&);
+
+    static Handle<Value> AddFormat(const Arguments&);
+    static Handle<Value> Format(const Arguments&);
+    static Handle<Value> FormatSize(const Arguments&);
+    static Handle<Value> AddCustomNumFormat(const Arguments&);
+    static Handle<Value> CustomNumFormat(const Arguments&);
+
+    static Handle<Value> AddFont(const Arguments&);
+    static Handle<Value> Font(const Arguments&);
+    static Handle<Value> FontSize(const Arguments&);
 
     libxl::Book* book;
 
