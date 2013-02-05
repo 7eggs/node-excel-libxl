@@ -33,22 +33,29 @@ If `libxl.so` is not located in one of the default library paths (e.g. `/usr/lib
 LD_LIBRARY_PATH="/path/to/libxl.so/" node app.js
 ```
 
-Nearest roadmap
-===============
+API
+===
+You can open libxl [documentation](http://www.libxl.com/documentation.html) and use it now with following restrictions:
+* Instead of `libxl` namespace you use `var libxl = require('excel-libxl')` as namespace, so `Book` class is available as `libxl.Book`, etc.
+* All the enums are added to module, so you can find `COLOR_GRAY40` at `libxl.COLOR_GRAY40`
 
-* Extend Sheet API to be able get data from cells or set it
-* Mac OS X support
+Thus I have in plans to add some kind of Helper/BaseApi class, I also will generate documentation someday.
+
 
 TODO
 ====
 
-* Finish up covering of Book and Sheet API
-* Add Format API
-* Add Font API
+* API covering:
+  * [libxl::Book](http://www.libxl.com/workbook.html)
+  * [libxl::Sheet](http://www.libxl.com/spreadsheet.html)
+  * [libxl::Format](http://www.libxl.com/format.html)
+  * ~~[libxl::Font](http://www.libxl.com/font.html)~~
+* Windows support
+* OS X support
 * Tests. I suppose [vows](http://vowsjs.org) will be used
 * Cleanup, refactor code
 
 Disclaimer
 ==========
 
-The sharks of C++ may find my code awful. My apologies, guys. I'm only learning C++. And thus addon is expected to be serious one I won't transfer ownership. But I promise to merge all the helpful pull requests.
+The sharks of C++ may find my code awful. My apologies, guys. I'm only learning C++. And thus addon is expected to be serious one I won't transfer ownership. But I promise to merge all the helpful pull requests and react on issues fast.
