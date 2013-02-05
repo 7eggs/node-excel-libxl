@@ -284,7 +284,7 @@ Handle<Value> LibxlBook::AddSheet(const Arguments& args) {
 /**
  * Insert new sheet at specified index
  *
- * @param {int}
+ * @param {int} idx
  *    Index to insert new sheet at
  * @param {String} name
  *    Name of sheet
@@ -315,7 +315,7 @@ Handle<Value> LibxlBook::InsertSheet(const Arguments& args) {
 /**
  * Get sheet at specified index
  *
- * @param {int}
+ * @param {int} idx
  *    Index of sheet
  */
 Handle<Value> LibxlBook::GetSheet(const Arguments& args) {
