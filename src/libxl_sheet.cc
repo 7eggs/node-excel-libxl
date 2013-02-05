@@ -142,10 +142,6 @@ Handle<Value> LibxlSheet::CellType(const Arguments& args) {
   LibxlSheet* obj = ObjectWrap::Unwrap<LibxlSheet>(args.This());
 
   int type = obj->sheet->cellType(row, col);
-  if (type == CELLTYPE_ERROR) {
-    return THREXC(obj->book->errorMessage());
-  }
-
   return scope.Close(Integer::New(type));
 }
 
