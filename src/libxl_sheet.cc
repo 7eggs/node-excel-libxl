@@ -4,6 +4,8 @@
  * See license text in LICENSE file
  */
 
+#include <string.h>
+
 #include "libxl_sheet.h"
 
 using namespace v8;

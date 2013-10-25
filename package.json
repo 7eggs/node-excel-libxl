@@ -19,7 +19,7 @@
   "main": "./lib/excel-libxl.js",
   "gypfile": true,
   "scripts": {
-    "preinstall": "sh install-libxl.sh",
+    "preinstall": "node install-libxl.js",
     "install": "node-gyp rebuild"
   }
 }
