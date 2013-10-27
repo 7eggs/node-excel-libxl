@@ -9,9 +9,13 @@
 
 Local<String> wstov8s(const wchar_t* str) {
   size_t length = wcslen(str);
-  char buf[length];
+  char* buf = new char[length];
   wcstombs(buf, str, length);
-  return String::New(buf);
+
+  Local<String> v8str = String::New(buf);
+  delete[] buf;
+
+  return v8str;
 }
 
 

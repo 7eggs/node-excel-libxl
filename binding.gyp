@@ -1,7 +1,7 @@
 {
   'targets': [
     {
-      'target_name': 'liblibxl_bindings',
+      'target_name': 'libxl_bindings',
       'sources': [
         'src/libxl_bindings.cc',
         'src/libxl_book.cc',
@@ -10,8 +10,12 @@
         'src/libxl_font.cc',
         'src/string_utils.cc'
       ],
+      'include_dirs': [
+        'deps/libxl/include_cpp'
+      ],
       'conditions': [
         ['OS=="linux"', {
+          'target_name': 'liblibxl_bindings',
           'conditions': [
             ['target_arch=="ia32"', {
               'link_settings': {
@@ -24,14 +28,14 @@
               }
             }]
           ],
-          'include_dirs': [
-            'deps/libxl/include_cpp'
-          ],
           'libraries': [
             '-lxl'
           ]
-        }, {
-          # only Linux is supported now ...
+        }],
+        ['OS=="win"', {
+          'libraries': [
+            '../deps/libxl/lib/libxl.lib'
+          ]
         }]
       ]
     }
